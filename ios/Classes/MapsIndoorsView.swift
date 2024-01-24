@@ -36,9 +36,8 @@ class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory {
 
 class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, FlutterMapView {
     
-    private var _MapView: MapView?
-    private let MP_APIKEY = "mapspeople"
-    private var mapsIndoorsData: MapsIndoorsData? = nil
+    private var _MapView: MapView
+    private var mapsIndoorsData: MapsIndoorsData
     private var args: Any? = nil
 
     init(
@@ -47,15 +46,15 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
         binaryMessenger messenger: FlutterBinaryMessenger?,
         mapsIndoorsData: MapsIndoorsData
     ) {
-        super.init()
-
         self.args = args
-        self.mapsIndoorsData = mapsIndoorsData;
+        self.mapsIndoorsData = mapsIndoorsData
         let mapInitOptions = MapInitOptions(resourceOptions: ResourceOptions(accessToken: Bundle.main.object(forInfoDictionaryKey: "MBXAccessToken") as? String ?? ""))
         _MapView = MapView(frame: frame, mapInitOptions: mapInitOptions)
 
+        super.init()
+
         if (MPMapsIndoors.shared.ready) {
-            mapsIndoorsData.mapControlMethodChannel?.invokeMethod("create", arguments: args)
+            mapsIndoorsIsReady()
         }else {
             mapsIndoorsData.delegate.append(MIReadyDelegate(view: self))
         }
@@ -64,25 +63,21 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
     }
 
     func view() -> UIView {
-        return _MapView!
+        return _MapView
     }
     
     func mapsIndoorsIsReady() {
-        if (mapsIndoorsData?.mapView != nil) {
-            DispatchQueue.main.async { [self] in
-                let config = MPMapConfig(mapBoxView: _MapView!, accessToken: Bundle.main.object(forInfoDictionaryKey: "MBXAccessToken") as? String ?? "")
-                let mapControl = MPMapsIndoors.createMapControl(mapConfig: config)
-                if (mapControl != nil) {
-                    //TODO: parse config
-                    mapControl?.showUserPosition = true
-                    //pretend config^
-                    mapsIndoorsData!.mapControl = mapControl
-                    mapsIndoorsData?.directionsRenderer = nil
-                    Task {
-                        //Momentary code just to get the map to a place where we show data on the map
-                        mapControl?.goTo(entity: await MPMapsIndoors.shared.venues()[0])
-                    }
-                }
+        guard mapsIndoorsData.mapView != nil else { return }
+        
+        DispatchQueue.main.async { [self] in
+            let config = MPMapConfig(mapBoxView: _MapView, accessToken: Bundle.main.object(forInfoDictionaryKey: "MBXAccessToken") as? String ?? "")
+            if let mapControl = MPMapsIndoors.createMapControl(mapConfig: config) {
+                //TODO: parse config
+                mapControl.showUserPosition = true
+                //pretend config^
+                mapsIndoorsData.mapControl = mapControl
+                mapsIndoorsData.directionsRenderer = nil
+                mapsIndoorsData.mapControlMethodChannel?.invokeMethod("create", arguments: nil)
             }
         }
     }
@@ -93,7 +88,7 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
         }
         
         DispatchQueue.main.async {
-            self._MapView?.mapboxMap.setCamera(to: update)
+            self._MapView.mapboxMap.setCamera(to: update)
         }
     }
     
@@ -113,7 +108,7 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
             guard let point = cameraUpdate.point else {
                 return nil
             }
-            let camera = _MapView!.mapboxMap.cameraState
+            let camera = _MapView.mapboxMap.cameraState
             
             update = CameraOptions(cameraState: camera)
             update.center = point.coordinate
@@ -121,19 +116,19 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
             guard let bounds = cameraUpdate.bounds else {
                 return nil
             }
-            let camera = _MapView!.mapboxMap.cameraState
+            let camera = _MapView.mapboxMap.cameraState
 
             let camerabounds = CameraBoundsOptions(bounds: CoordinateBounds(southwest: bounds.southWest, northeast: bounds.northEast))
             
             update = CameraOptions(cameraState: camera)
             update.center = camerabounds.bounds?.center
         case "zoomBy":
-            let camera = _MapView!.mapboxMap.cameraState
+            let camera = _MapView.mapboxMap.cameraState
             
             update = CameraOptions(cameraState: camera)
             update.zoom = CGFloat(cameraUpdate.zoom!)
         case "zoomTo":
-            let camera = _MapView!.mapboxMap.cameraState
+            let camera = _MapView.mapboxMap.cameraState
             
             update = CameraOptions(cameraState: camera)
             update.zoom = CGFloat(cameraUpdate.zoom!)
@@ -141,7 +136,7 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
             guard let position = cameraUpdate.position else {
                 return nil
             }
-            let camera = _MapView!.mapboxMap.cameraState
+            let camera = _MapView.mapboxMap.cameraState
             
             update = CameraOptions(cameraState: camera)
             update.center = position.target.coordinate

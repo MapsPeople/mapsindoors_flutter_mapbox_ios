@@ -50,16 +50,14 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
         self.mapsIndoorsData = mapsIndoorsData
         let mapInitOptions = MapInitOptions(resourceOptions: ResourceOptions(accessToken: Bundle.main.object(forInfoDictionaryKey: "MBXAccessToken") as? String ?? ""))
         _MapView = MapView(frame: frame, mapInitOptions: mapInitOptions)
-
         super.init()
+        mapsIndoorsData.mapView = self
 
         if (MPMapsIndoors.shared.ready) {
             mapsIndoorsIsReady()
-        }else {
+        } else {
             mapsIndoorsData.delegate.append(MIReadyDelegate(view: self))
         }
-        
-        mapsIndoorsData.mapView = self
     }
 
     func view() -> UIView {

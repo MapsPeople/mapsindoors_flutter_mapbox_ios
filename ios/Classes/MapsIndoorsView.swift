@@ -1,6 +1,5 @@
 import Flutter
 import MapboxMaps
-import MapsIndoors
 import MapsIndoorsCore
 import MapsIndoorsMapbox
 
@@ -48,7 +47,7 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
     ) {
         self.args = args
         self.mapsIndoorsData = mapsIndoorsData
-        let mapInitOptions = MapInitOptions(resourceOptions: ResourceOptions(accessToken: Bundle.main.object(forInfoDictionaryKey: "MBXAccessToken") as? String ?? ""))
+        let mapInitOptions = MapInitOptions(mapOptions: MapOptions())
         _MapView = MapView(frame: frame, mapInitOptions: mapInitOptions)
         super.init()
         mapsIndoorsData.mapView = self

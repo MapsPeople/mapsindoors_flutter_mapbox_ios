@@ -34,7 +34,6 @@ class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory {
 }
 
 class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, FlutterMapView {
-    
     private var _MapView: MapView
     private var mapsIndoorsData: MapsIndoorsData
     private var args: Any? = nil
@@ -145,8 +144,15 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
             return nil
         }
 
-        
         return update
+    }
+    
+    func showCompassOnRotate(_ show: Bool) throws {
+        if show {
+            _MapView.ornaments.options.compass.visibility = .adaptive
+        } else {
+            _MapView.ornaments.options.compass.visibility = .hidden
+        }
     }
 }
 

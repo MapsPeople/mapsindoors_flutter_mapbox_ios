@@ -137,6 +137,7 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
             update = CameraOptions(cameraState: camera)
             update.center = position.target.coordinate
             update.bearing = CLLocationDirection(position.bearing)
+            update.pitch = CGFloat(position.tilt)
             if let zoom = cameraUpdate.zoom {
                 update.zoom = CGFloat(zoom)
             }

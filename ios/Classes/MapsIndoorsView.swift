@@ -74,6 +74,7 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
                 mapsIndoorsData.mapControl = mapControl
                 mapsIndoorsData.directionsRenderer = nil
                 mapsIndoorsData.mapControlMethodChannel?.invokeMethod("create", arguments: nil)
+                mapControl.floorSelector = mapsIndoorsData.floorSelector
             }
         }
     }

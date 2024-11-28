@@ -36,7 +36,7 @@ class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory {
 class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, FlutterMapView {
     private var _MapView: MapView
     private var mapsIndoorsData: MapsIndoorsData
-    private var args: Any? = nil
+    private var args: [String : Any]?
 
     init(
         frame: CGRect,
@@ -44,11 +44,20 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
         binaryMessenger messenger: FlutterBinaryMessenger?,
         mapsIndoorsData: MapsIndoorsData
     ) {
-        self.args = args
+        self.args = args as? [String: Any]
         self.mapsIndoorsData = mapsIndoorsData
-        let mapInitOptions = MapInitOptions(mapOptions: MapOptions())
+        
+        let options = if let initialCamPos = self.args?["initialCameraPosition"] as? String, let position = try? JSONDecoder().decode(CameraPosition.self, from: initialCamPos.data(using: .utf8)!) {
+            Self.makeMBCameraPosition(cameraPosition: position)
+        } else {
+            Self.makeMBCameraPosition()
+        }
+
+        let mapInitOptions = MapInitOptions(cameraOptions: options)
+
         _MapView = MapView(frame: frame, mapInitOptions: mapInitOptions)
         super.init()
+
         mapsIndoorsData.mapView = self
 
         if (MPMapsIndoors.shared.ready) {
@@ -91,6 +100,13 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
     
     func moveCamera(cameraUpdate: CameraUpdate) throws {
         try animateCamera(cameraUpdate: cameraUpdate, duration: 0)
+    }
+
+    static func makeMBCameraPosition(cameraPosition: CameraPosition? = nil) -> CameraOptions? {
+        guard let cameraPosition else { return nil }
+        
+        let camera = CameraState(center: cameraPosition.target.coordinate, padding: .zero, zoom: CGFloat(cameraPosition.zoom), bearing: CLLocationDirection(cameraPosition.bearing), pitch: CGFloat(cameraPosition.tilt))
+        return CameraOptions(cameraState: camera)
     }
     
     func makeMBCameraUpdate(cameraUpdate: CameraUpdate) -> CameraOptions? {

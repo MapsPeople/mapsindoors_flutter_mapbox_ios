@@ -36,7 +36,7 @@ class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory {
 class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, FlutterMapView {
     private var _MapView: MapView
     private var mapsIndoorsData: MapsIndoorsData
-    private var args: [String : Any]?
+    private var mapConfig: MPMapConfigCodable?
 
     init(
         frame: CGRect,
@@ -44,10 +44,14 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
         binaryMessenger messenger: FlutterBinaryMessenger?,
         mapsIndoorsData: MapsIndoorsData
     ) {
-        self.args = args as? [String: Any]
+        let arguments = args as? [String: Any]
         self.mapsIndoorsData = mapsIndoorsData
         
-        let options = if let initialCamPos = self.args?["initialCameraPosition"] as? String, let position = try? JSONDecoder().decode(CameraPosition.self, from: initialCamPos.data(using: .utf8)!) {
+        if let configArgs = arguments?["mapConfig"] as? String {
+            mapConfig = try? JSONDecoder().decode(MPMapConfigCodable.self, from: configArgs.data(using: .utf8)!)
+        }
+
+        let options = if let initialCamPos = arguments?["initialCameraPosition"] as? String, let position = try? JSONDecoder().decode(CameraPosition.self, from: initialCamPos.data(using: .utf8)!) {
             Self.makeMBCameraPosition(cameraPosition: position)
         } else {
             Self.makeMBCameraPosition()
@@ -56,6 +60,7 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
         let mapInitOptions = MapInitOptions(cameraOptions: options)
 
         _MapView = MapView(frame: frame, mapInitOptions: mapInitOptions)
+        _MapView.mapboxMap.loadStyle(.streets)
         super.init()
 
         mapsIndoorsData.mapView = self
@@ -76,10 +81,13 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
         
         DispatchQueue.main.async { [self] in
             let config = MPMapConfig(mapBoxView: _MapView, accessToken: Bundle.main.object(forInfoDictionaryKey: "MBXAccessToken") as? String ?? "")
+            config.setMapsIndoorsTransitionLevel(zoom: mapConfig?.mapsindoorsTransitionLevel ?? 15)
+            if let mapboxStyle = mapConfig?.mapStyleUri, let styleUri = StyleURI(rawValue: mapboxStyle) {
+                self._MapView.mapboxMap.loadStyle(styleUri)
+                config.useMapsIndoorsStyle(value: false)
+            }
             if let mapControl = MPMapsIndoors.createMapControl(mapConfig: config) {
-                //TODO: parse config
-                mapControl.showUserPosition = true
-                //pretend config^
+                mapControl.showUserPosition = mapConfig?.showUserPosition ?? false
                 mapsIndoorsData.mapControl = mapControl
                 mapsIndoorsData.directionsRenderer = nil
                 mapsIndoorsData.mapControlMethodChannel?.invokeMethod("create", arguments: nil)
@@ -177,4 +185,14 @@ class MIReadyDelegate: MapsIndoorsReadyDelegate {
             view.mapsIndoorsIsReady()
         }
     }
+}
+
+private class MPMapConfigCodable: Codable {
+    var mapsindoorsTransitionLevel: Int?
+    var textSize: Int?
+    var showFloorSelector: Bool?
+    var showInfoWindowOnLocationClicked: Bool?
+    var showUserPosition: Bool?
+    var useDefaultMapsIndoorsStyle: Bool?
+    var mapStyleUri: String?
 }

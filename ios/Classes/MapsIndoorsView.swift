@@ -5,7 +5,7 @@ import MapsIndoorsMapbox
 
 class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory {
     private var messenger: FlutterBinaryMessenger
-    private var mapsIndoorsData: MapsIndoorsData
+    private weak var mapsIndoorsData: MapsIndoorsData?
 
     init(
         messenger: FlutterBinaryMessenger,
@@ -35,14 +35,14 @@ class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory {
 
 class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, FlutterMapView {
     private var _MapView: MapView
-    private var mapsIndoorsData: MapsIndoorsData
+    private weak var mapsIndoorsData: MapsIndoorsData?
     private var mapConfig: MPMapConfigCodable?
 
     init(
         frame: CGRect,
         arguments args: Any?,
         binaryMessenger messenger: FlutterBinaryMessenger?,
-        mapsIndoorsData: MapsIndoorsData
+        mapsIndoorsData: MapsIndoorsData?
     ) {
         let arguments = args as? [String: Any]
         self.mapsIndoorsData = mapsIndoorsData
@@ -63,12 +63,12 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
         _MapView.mapboxMap.loadStyle(.streets)
         super.init()
 
-        mapsIndoorsData.mapView = self
+        mapsIndoorsData?.mapView = self
 
         if (MPMapsIndoors.shared.ready) {
             mapsIndoorsIsReady()
         } else {
-            mapsIndoorsData.delegate.append(MIReadyDelegate(view: self))
+            mapsIndoorsData?.delegate.append(MIReadyDelegate(view: self))
         }
     }
 
@@ -77,7 +77,7 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
     }
     
     func mapsIndoorsIsReady() {
-        guard mapsIndoorsData.mapView != nil else { return }
+        guard mapsIndoorsData?.mapView != nil else { return }
         
         DispatchQueue.main.async { [self] in
             let config = MPMapConfig(mapBoxView: _MapView, accessToken: Bundle.main.object(forInfoDictionaryKey: "MBXAccessToken") as? String ?? "")
@@ -88,10 +88,10 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
             }
             if let mapControl = MPMapsIndoors.createMapControl(mapConfig: config) {
                 mapControl.showUserPosition = mapConfig?.showUserPosition ?? false
-                mapsIndoorsData.mapControl = mapControl
-                mapsIndoorsData.directionsRenderer = nil
-                mapsIndoorsData.mapControlMethodChannel?.invokeMethod("create", arguments: nil)
-                mapControl.floorSelector = mapsIndoorsData.floorSelector
+                mapsIndoorsData?.mapControl = mapControl
+                mapsIndoorsData?.directionsRenderer = nil
+                mapsIndoorsData?.mapControlMethodChannel?.invokeMethod("create", arguments: nil)
+                mapControl.floorSelector = mapsIndoorsData?.floorSelector
             }
         }
     }
@@ -172,7 +172,7 @@ class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, Flutter
 }
 
 class MIReadyDelegate: MapsIndoorsReadyDelegate {
-    let view: FLNativeView
+    weak var view: FLNativeView?
     
     init(view: FLNativeView) {
         self.view = view
@@ -180,9 +180,9 @@ class MIReadyDelegate: MapsIndoorsReadyDelegate {
     
     func isReady(error: MPError?) {
         if error == .invalidApiKey || error == .networkError || error == .unknownError {
-            //TODO: Do nothing i guees?
+            // TODO: Do nothing i guees?
         } else {
-            view.mapsIndoorsIsReady()
+            view?.mapsIndoorsIsReady()
         }
     }
 }

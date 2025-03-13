@@ -33,7 +33,7 @@ class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory {
     }
 }
 
-class FLNativeView: NSObject, FlutterPlatformView, MPMapControlDelegate, FlutterMapView {
+class FLNativeView: NSObject, FlutterPlatformView, FlutterMapView {
     private var _MapView: MapView
     private weak var mapsIndoorsData: MapsIndoorsData?
     private var mapConfig: MPMapConfigCodable?

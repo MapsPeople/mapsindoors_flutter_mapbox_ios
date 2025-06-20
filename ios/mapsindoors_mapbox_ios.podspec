@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'mapsindoors_mapbox_ios'
-  s.version          = '4.2.0'
+  s.version          = '4.2.2'
   s.summary          = 'Mapsindoors flutter plugin'
   s.homepage         = 'http://mapspeople.com'
   s.license          = { :file => '../LICENSE' }
@@ -12,12 +12,12 @@ Pod::Spec.new do |s|
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
-  s.platform = :ios, '14.0'
+  s.platform = :ios, '15.0'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.swift_version = '5.9'
 
-  s.dependency 'MapsIndoorsCodable', "4.11.0"
-  s.dependency 'MapsIndoorsMapbox11', "4.11.0"
+  s.dependency 'MapsIndoorsCodable', "4.12.1"
+  s.dependency 'MapsIndoorsMapbox11', "4.12.1"
 end

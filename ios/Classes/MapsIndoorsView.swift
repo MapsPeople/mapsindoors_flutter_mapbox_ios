@@ -37,6 +37,7 @@ class FLNativeView: NSObject, FlutterPlatformView, FlutterMapView {
     private var _MapView: MapView
     private weak var mapsIndoorsData: MapsIndoorsData?
     private var mapConfig: MPMapConfigCodable?
+    private var arguments: [String: Any]?
 
     init(
         frame: CGRect,
@@ -44,7 +45,7 @@ class FLNativeView: NSObject, FlutterPlatformView, FlutterMapView {
         binaryMessenger messenger: FlutterBinaryMessenger?,
         mapsIndoorsData: MapsIndoorsData?
     ) {
-        let arguments = args as? [String: Any]
+        arguments = args as? [String: Any]
         self.mapsIndoorsData = mapsIndoorsData
         
         if let configArgs = arguments?["mapConfig"] as? String {
@@ -87,6 +88,9 @@ class FLNativeView: NSObject, FlutterPlatformView, FlutterMapView {
                 config.useMapsIndoorsStyle(value: false)
             }
             if let mapControl = MPMapsIndoors.createMapControl(mapConfig: config) {
+                if let featureArgs = arguments?["features"] as? [Int] {
+                    mapControl.hiddenFeatures = MPFeatureType.fixMapping(featureArgs)
+                }
                 mapControl.showUserPosition = mapConfig?.showUserPosition ?? false
                 mapsIndoorsData?.mapControl = mapControl
                 mapsIndoorsData?.directionsRenderer = nil
@@ -138,7 +142,7 @@ class FLNativeView: NSObject, FlutterPlatformView, FlutterMapView {
             update.center = camerabounds.bounds?.center
             
         case "zoomBy":
-            update.zoom = CGFloat(cameraUpdate.zoom!)
+            update.zoom = camera.zoom + CGFloat(cameraUpdate.zoom!)
             
         case "zoomTo":
             update.zoom = CGFloat(cameraUpdate.zoom!)
@@ -195,4 +199,34 @@ private class MPMapConfigCodable: Codable {
     var showUserPosition: Bool?
     var useDefaultMapsIndoorsStyle: Bool?
     var mapStyleUri: String?
+}
+
+extension MPFeatureType {
+    static func fixMapping(_ features: [Int]) -> [Int] {
+        features.compactMap { feature in
+            switch feature {
+            case 0: MPFeatureType.model2D
+            case 1: MPFeatureType.walls2D
+            case 2: MPFeatureType.model3D
+            case 3: MPFeatureType.walls3D
+            case 4: MPFeatureType.extrusion3D
+            case 5: MPFeatureType.extrudedBuildings
+            default: nil
+            }
+        }.map(\.rawValue)
+    }
+    
+    static func fixMapping(_ features: [MPFeatureType]) -> [Int] {
+        features.compactMap { feature in
+            switch feature {
+            case .model2D: 0
+            case .walls2D: 1
+            case .model3D: 2
+            case .walls3D: 3
+            case .extrusion3D: 4
+            case .extrudedBuildings: 5
+            default: nil
+            }
+        }
+    }
 }

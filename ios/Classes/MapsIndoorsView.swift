@@ -106,7 +106,7 @@ class FLNativeView: NSObject, FlutterPlatformView, FlutterMapView {
         }
         
         DispatchQueue.main.async {
-            self._MapView.mapboxMap.setCamera(to: update)
+            self._MapView.camera.fly(to: update, duration: TimeInterval(duration) / 1000.0)
         }
     }
     
@@ -142,10 +142,10 @@ class FLNativeView: NSObject, FlutterPlatformView, FlutterMapView {
             update.center = camerabounds.bounds?.center
             
         case "zoomBy":
-            update.zoom = camera.zoom + CGFloat(cameraUpdate.zoom!)
+            update.zoom = camera.zoom + CGFloat(cameraUpdate.position!.zoom)
             
         case "zoomTo":
-            update.zoom = CGFloat(cameraUpdate.zoom!)
+            update.zoom = CGFloat(cameraUpdate.position!.zoom)
             
         case "fromCameraPosition":
             guard let position = cameraUpdate.position else {
@@ -155,9 +155,7 @@ class FLNativeView: NSObject, FlutterPlatformView, FlutterMapView {
             update.center = position.target.coordinate
             update.bearing = CLLocationDirection(position.bearing)
             update.pitch = CGFloat(position.tilt)
-            if let zoom = cameraUpdate.zoom {
-                update.zoom = CGFloat(zoom)
-            }
+            update.zoom = CGFloat(position.zoom)
             
         default:
             return nil

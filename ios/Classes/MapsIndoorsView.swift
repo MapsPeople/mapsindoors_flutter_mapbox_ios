@@ -88,7 +88,7 @@ class FLNativeView: NSObject, FlutterPlatformView, FlutterMapView {
                 config.useMapsIndoorsStyle(value: false)
             }
             if let mapControl = MPMapsIndoors.createMapControl(mapConfig: config) {
-                if let featureArgs = arguments?["features"] as? [Int] {
+                if let featureArgs = arguments?["hiddenFeatures"] as? [Int] {
                     mapControl.hiddenFeatures = MPFeatureType.fixMapping(featureArgs)
                 }
                 mapControl.showUserPosition = mapConfig?.showUserPosition ?? false
@@ -125,6 +125,10 @@ class FLNativeView: NSObject, FlutterPlatformView, FlutterMapView {
         let camera = _MapView.mapboxMap.cameraState
         var update = CameraOptions(cameraState: camera)
         
+        if let padding = cameraUpdate.padding {
+            update.padding = UIEdgeInsets(top: CGFloat(padding), left: CGFloat(padding), bottom: CGFloat(padding), right: CGFloat(padding))
+        }
+
         switch cameraUpdate.mode {
         case "fromPoint":
             guard let point = cameraUpdate.point else {
@@ -137,15 +141,16 @@ class FLNativeView: NSObject, FlutterPlatformView, FlutterMapView {
             guard let bounds = cameraUpdate.bounds else {
                 return nil
             }
-
-            let camerabounds = CameraBoundsOptions(bounds: CoordinateBounds(southwest: bounds.southWest, northeast: bounds.northEast))
-            update.center = camerabounds.bounds?.center
-            
+            do {
+                update = try _MapView.mapboxMap.camera(for: [bounds.southWest, bounds.northEast], camera: update, coordinatesPadding: nil, maxZoom: nil, offset: nil)
+            } catch {
+                return nil
+            }
         case "zoomBy":
-            update.zoom = camera.zoom + CGFloat(cameraUpdate.position!.zoom)
+            update.zoom = camera.zoom + CGFloat(cameraUpdate.zoom ?? 0)
             
         case "zoomTo":
-            update.zoom = CGFloat(cameraUpdate.position!.zoom)
+            update.zoom = CGFloat(cameraUpdate.zoom ?? 0)
             
         case "fromCameraPosition":
             guard let position = cameraUpdate.position else {

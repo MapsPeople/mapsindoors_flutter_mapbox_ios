@@ -10,14 +10,15 @@ Pod::Spec.new do |s|
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Mapspeople' => 'info@mapspeople.com' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  s.source_files = 'mapsindoors_mapbox_ios/Sources/mapsindoors_mapbox_ios/**/*.swift'
   s.dependency 'Flutter'
   s.platform = :ios, '15.0'
+  s.ios.deployment_target = "15.0"
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
-  s.swift_version = '5.9'
+  s.swift_version = '5.10'
 
-  s.dependency 'MapsIndoorsCodable', "4.14.0"
-  s.dependency 'MapsIndoorsMapbox11', "4.14.0"
+  s.dependency 'MapsIndoorsCodable', "4.15.2"
+  s.dependency 'MapsIndoorsMapbox11', "4.15.2"
 end

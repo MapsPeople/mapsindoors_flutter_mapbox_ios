@@ -19,6 +19,6 @@ Pod::Spec.new do |s|
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.swift_version = '5.10'
 
-  s.dependency 'MapsIndoorsCodable', "4.15.2"
-  s.dependency 'MapsIndoorsMapbox11', "4.15.2"
+  s.dependency 'MapsIndoorsCodable', "4.15.6"
+  s.dependency 'MapsIndoorsMapbox11', "4.15.6"
 end

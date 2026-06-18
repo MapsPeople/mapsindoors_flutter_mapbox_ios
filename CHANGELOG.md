@@ -1,5 +1,7 @@
 # Changelog
 
+## 4.7.3
+See the [main](https://pub.dev/packages/mapsindoors_mapbox/changelog#473) package for the changelog.
 ## 4.7.2
 See the [main](https://pub.dev/packages/mapsindoors_mapbox/changelog#472) package for the changelog.
 ## 4.7.1
